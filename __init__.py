@@ -58,7 +58,7 @@ def precrec_unvoted(preds, gts, radius, pred_rphi=False, gt_rphi=False):
     """
     # Tested against other code.
 
-    npred, npred_hit, ngt, ngt_hit = 0, 0, 0, 0
+    npred, npred_hit, ngt, ngt_hit = 0.0, 0.0, 0.0, 0.0
     for ps, gts in zip(preds, gts):
         # Distance between each ground-truth and predictions
         assoc = np.zeros((len(gts), len(ps)))
@@ -94,7 +94,7 @@ def precrec(preds, gts, radius, pred_rphi=False, gt_rphi=False):
 
     Returns a pair of numbers: (precision, recall)
     """
-    tp, fp, fn = 0, 0, 0
+    tp, fp, fn = 0.0, 0.0, 0.0
     for ps, gts in zip(preds, gts):
         # Assign each ground-truth the prediction which is closest to it AND inside the radius.
         assoc = np.zeros((len(gts), len(ps)))
