@@ -1,5 +1,7 @@
 import numpy as np
 import json
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 
 def xy_to_rphi(x, y):
@@ -128,3 +130,26 @@ def precrec(preds, gts, radius, pred_rphi=False, gt_rphi=False):
 #    gts=[[(-0.5,0),(0.5,0),(-2,-2)]],
 #    radius=0.6
 # )
+
+
+def precision_recall_curve(precrecs, ls='-o', ax=None, **figkw):
+    """
+    - `precrecs` list of (precision,recall) pairs.
+    """
+
+    ret = ax
+    if ax is None:
+        ret = fig, ax = plt.subplots(**figkw)
+
+    precs, recs = zip(*precrecs)
+
+    ax.plot([0,1], [1,0], ls="--", c=".6")
+    ax.plot(recs, precs, ls)
+    ax.set_xlim(-0.02,1.02)
+    ax.set_ylim(-0.02,1.02)
+    ax.set_xlabel("Recall [%]")
+    ax.set_ylabel("Precision [%]")
+    ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: '{:.0f}'.format(x*100)))
+    ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: '{:.0f}'.format(x*100)))
+
+    return ret
