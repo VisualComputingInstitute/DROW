@@ -54,6 +54,8 @@ def precrec_unvoted(preds, gts, radius, pred_rphi=False, gt_rphi=False):
 
     Returns a pair of numbers: (precision, recall)
     """
+    # Tested against other code.
+
     npred, npred_hit, ngt, ngt_hit = 0, 0, 0, 0
     for ps, gts in zip(preds, gts):
         # Distance between each ground-truth and predictions
@@ -76,3 +78,53 @@ def precrec_unvoted(preds, gts, radius, pred_rphi=False, gt_rphi=False):
         npred_hit/npred if npred > 0 else np.nan,
           ngt_hit/ngt   if   ngt > 0 else np.nan
     )
+
+
+def precrec(preds, gts, radius, pred_rphi=False, gt_rphi=False):
+    """
+    Ideally, we'd use Hungarian algorithm instead of greedy one on all "hits" within the radius, but meh.
+
+    - `preds` an iterable (scans) of iterables (per scan) containing predicted x/y or r/phi pairs.
+    - `gts` an iterable (scans) of iterables (per scan) containing ground-truth x/y or r/phi pairs.
+    - `radius` the cutoff-radius for "correct", in meters.
+    - `pred_rphi` whether `preds` is r/phi (True) or x/y (False).
+    - `gt_rphi` whether `gts` is r/phi (True) or x/y (False).
+
+    Returns a pair of numbers: (precision, recall)
+    """
+    tp, fp, fn = 0, 0, 0
+    for ps, gts in zip(preds, gts):
+        # Assign each ground-truth the prediction which is closest to it AND inside the radius.
+        assoc = np.zeros((len(gts), len(ps)))
+        for igt, gt in enumerate(gts):
+            min_d = radius
+            best = -1
+            for ip, p in enumerate(ps):
+                # Skip prediction if already associated.
+                if np.any(assoc[:,ip]):
+                    continue
+
+                px, py = rphi_to_xy(*p) if pred_rphi else p
+                gx, gy = rphi_to_xy(*gt) if pred_rphi else gt
+                d = np.hypot(px-gx, py-gy)
+                if d < min_d:
+                    min_d = d
+                    best = ip
+
+            if best != -1:
+                assoc[igt,best] = 1
+
+        nassoc = np.sum(assoc)
+        tp += nassoc  # All associated predictions are true pos.
+        fp += len(ps) - nassoc  # All not-associated predictions are false pos.
+        fn += len(gts) - nassoc  # All not-associated ground-truths are false negs.
+
+    return tp/(fp+tp) if fp+tp > 0 else np.nan, tp/(fn+tp) if fn+tp > 0 else np.nan
+
+
+# Tested with gts,gts -> 1,1 and the following -> (0.5, 0.6666)
+# precrec(
+#    preds=[[(-1,0),(0,0),(1,0),(0,1)]],
+#    gts=[[(-0.5,0),(0.5,0),(-2,-2)]],
+#    radius=0.6
+# )
