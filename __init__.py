@@ -162,7 +162,7 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, grid_bin_size=0.1, x
     '''
     Convert a list of votes to a list of detections based on Non-Max supression.
 
-    -`votes` an iterables containing predicted x/y or r/phi pairs.
+    - `votes` an iterables containing predicted x/y or r/phi pairs.
     - `in_rphi` whether `votes` is r/phi (True) or x/y (True).
     - `out_rphi` whether the output is r/phi (True) or x/y (True).
     - `grid_bin_size` the bins size in meters used in the grid where votes are cast (0.1).
