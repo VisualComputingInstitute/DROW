@@ -163,15 +163,15 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, grid_bin_size=0.1, x
     Convert a list of votes to a list of detections based on Non-Max supression.
 
     - `votes` an iterables containing predicted x/y or r/phi pairs.
-    - `in_rphi` whether `votes` is r/phi (True) or x/y (True).
-    - `out_rphi` whether the output is r/phi (True) or x/y (True).
-    - `grid_bin_size` the bins size in meters used in the grid where votes are cast (0.1).
-    - `x_min` the horizontal lower limit for the voting grid in meters (-15.0).
-    - `x_min` the horizontal upper limit for the voting grid in meters (15.0).
-    - `y_min` the vertical lower limit for the voting grid in meters (-15.0).
-    - `y_min` the vertical upper limit for the voting grid in meters (15.0).
-    - `blur_win` the window size (in bins) used to blur voting grid (11).
-    - `blur_sigma` the sigma used to compute the Gaussian in the blur window (5.0).
+    - `in_rphi` whether `votes` is r/phi (True) or x/y (False).
+    - `out_rphi` whether the output is r/phi (True) or x/y (False).
+    - `grid_bin_size` the bins size in meters used in the grid where votes are cast.
+    - `x_min` the horizontal lower limit for the voting grid in meters.
+    - `x_min` the horizontal upper limit for the voting grid in meters.
+    - `y_min` the vertical lower limit for the voting grid in meters.
+    - `y_min` the vertical upper limit for the voting grid in meters.
+    - `blur_win` the window size (in bins) used to blur voting grid.
+    - `blur_sigma` the sigma used to compute the Gaussian in the blur window.
     '''
     x_range = int((x_max-x_min)/grid_bin_size)
     y_range = int((y_max-y_min)/grid_bin_size)
@@ -203,10 +203,10 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
 
     - `scan` an iterable or radi within a laser scan.
     - `standard_depth` the reference distance (in meters) at which a window
-      with `window_size` (4.0).
-    - `window_size` the window of laser rays that will be extracted everywhere (48).
+      with `window_size`.
+    - `window_size` the window of laser rays that will be extracted everywhere.
     - `threshold_distance` the distance in meters from the center point that will be
-      used to clamp the laser radi. Resulting windows are thus round and not rectangular. (1.0)
+      used to clamp the laser radi. Resulting windows are thus round and not rectangular.
     '''
 
     cut_outs = np.zeros((len(scan),window_size), dtype=np.float32)
