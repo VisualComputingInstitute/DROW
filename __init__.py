@@ -190,3 +190,52 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, grid_bin_size=0.1, x
     m_x = m_x*grid_bin_size + x_min
     m_y = m_y*grid_bin_size + y_min
     return [xy_to_rphi(x,y) if out_rphi else (x,y) for x,y in zip(m_x, m_y)]
+
+
+
+def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0):
+    '''
+    Generate window cut outs that all have a fixed size independent of depth.
+    This means areas close to the scanner will be subsampled and areas far away
+    will be upsampled.
+    All cut outs will have values between - `threshold_distance` and + `threshold_distance`
+    as they are normalized by the center point.
+
+    - `scan` an iterable or radi within a laser scan.
+    - `standard_depth` the reference distance (in meters) at which a window
+      with `window_size` (4.0).
+    - `window_size` the window of laser rays that will be extracted everywhere (48).
+    - `threshold_distance` the distance in meters from the center point that will be
+      used to clamp the laser radi. Resulting windows are thus round and not rectangular. (1.0)
+    '''
+
+    cut_outs = np.zeros((len(scan),window_size), dtype=np.float32)
+
+    scan_length = len(scan)
+    s_np = np.asarray(scan)
+    current_size = (window_size * standard_depth / s_np).astype(np.int32)
+    start = -current_size/2 + np.arange(scan_length)
+    end = start + current_size
+    near = s_np-threshold_distance
+    far  = s_np+threshold_distance
+    s_np_extended = np.asarray(scan +[0])
+
+    for i in xrange(scan_length):
+        #Get the window.
+        sample_points = np.arange(start[i],end[i])
+        sample_points[sample_points < 0] = -1
+        sample_points[sample_points >= scan_length] = -1
+        window = s_np_extended[sample_points].astype(np.float32)
+
+        #Threshold the near and far values
+        window[window > far[i]] = far[i]
+        window[window < near[i]] = near[i]
+
+        #Shift everything to be centered around the middle point. Values will then span [-d,d]
+        window = window - s_np[i]
+        #############################
+
+        #resample it to the correct size.
+        cut_outs[i,:] = cv2.resize(window.reshape((1,current_size[i])), (window_size,1))[0]
+
+    return cut_outs
