@@ -221,13 +221,13 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     cut_outs = np.zeros((N, window_size), dtype=np.float32)
 
     current_size = (window_size * standard_depth / s_np).astype(np.int32)
-    start = -current_size/2 + np.arange(N)
+    start = -current_size//2 + np.arange(N)
     end = start + current_size
     near = s_np-threshold_distance
     far  = s_np+threshold_distance
     s_np_extended = np.append(s_np, 0)
 
-    for i in xrange(N):
+    for i in range(N):
         #Get the window.
         sample_points = np.arange(start[i],end[i])
         sample_points[sample_points < 0] = -1
