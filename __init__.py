@@ -200,7 +200,7 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, grid_bin_size=0.1, x
 
 
 
-def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0):
+def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, border=29.99):
     '''
     Generate window cut outs that all have a fixed size independent of depth.
     This means areas close to the scanner will be subsampled and areas far away
@@ -214,6 +214,7 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     - `threshold_distance` the distance in meters from the center point that will be
       used to clamp the laser radii. Since we're talking about laser-radii, this means the cutout is
       a donut-shaped hull, as opposed to a rectangular hull.
+    - `border` the radius value to fill the half of the outermost windows with.
     '''
     s_np = np.fromiter(iter(scan), dtype=np.float32)
     N = len(s_np)
@@ -225,7 +226,7 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     end = start + current_size
     near = s_np-threshold_distance
     far  = s_np+threshold_distance
-    s_np_extended = np.append(s_np, 0)
+    s_np_extended = np.append(s_np, border)
 
     for i in range(N):
         # Get the window.
