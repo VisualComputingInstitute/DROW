@@ -6,6 +6,14 @@ import cv2
 import scipy.ndimage
 
 
+laserFoV = np.radians(225)
+
+
+def laser_angles(N, fov=None):
+    fov = fov or laserFoV
+    return np.linspace(-fov*0.5, fov*0.5, N)
+
+
 def xy_to_rphi(x, y):
     # NOTE: Axes rotated by 90 CCW by intent, so tat 0 is top.
     return np.hypot(x, y), np.arctan2(-x, y)
@@ -15,12 +23,11 @@ def rphi_to_xy(r, phi):
     return r * -np.sin(phi), r * np.cos(phi)
 
 
-def scan_to_xy(scan, thresh=None, laserFoV=np.radians(225)):
+def scan_to_xy(scan, thresh=None, fov=None):
     s = np.array(scan, copy=True)
     if thresh is not None:
         s[s > thresh] = np.nan
-    angles = np.linspace(-laserFoV/2, laserFoV/2, len(scan))
-    return rphi_to_xy(s, angles)
+    return rphi_to_xy(s, laser_angles(len(scan), fov))
 
 
 def load_scan(fname):
