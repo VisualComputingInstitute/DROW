@@ -215,23 +215,23 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     - `threshold_distance` the distance in meters from the center point that will be
       used to clamp the laser radi. Resulting windows are thus round and not rectangular.
     '''
+    s_np = np.fromiter(iter(scan), dtype=np.float32)
+    N = len(s_np)
 
-    cut_outs = np.zeros((len(scan),window_size), dtype=np.float32)
+    cut_outs = np.zeros((N, window_size), dtype=np.float32)
 
-    scan_length = len(scan)
-    s_np = np.asarray(scan)
     current_size = (window_size * standard_depth / s_np).astype(np.int32)
-    start = -current_size/2 + np.arange(scan_length)
+    start = -current_size/2 + np.arange(N)
     end = start + current_size
     near = s_np-threshold_distance
     far  = s_np+threshold_distance
-    s_np_extended = np.asarray(scan +[0])
+    s_np_extended = np.append(s_np, 0)
 
-    for i in xrange(scan_length):
+    for i in xrange(N):
         #Get the window.
         sample_points = np.arange(start[i],end[i])
         sample_points[sample_points < 0] = -1
-        sample_points[sample_points >= scan_length] = -1
+        sample_points[sample_points >= N] = -1
         window = s_np_extended[sample_points].astype(np.float32)
 
         #Threshold the near and far values
