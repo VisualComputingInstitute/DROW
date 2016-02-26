@@ -205,15 +205,15 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     Generate window cut outs that all have a fixed size independent of depth.
     This means areas close to the scanner will be subsampled and areas far away
     will be upsampled.
-    All cut outs will have values between - `threshold_distance` and + `threshold_distance`
+    All cut outs will have values between `-threshold_distance` and `+threshold_distance`
     as they are normalized by the center point.
 
-    - `scan` an iterable or radi within a laser scan.
-    - `standard_depth` the reference distance (in meters) at which a window
-      with `window_size`.
+    - `scan` an iterable of radii within a laser scan.
+    - `standard_depth` the reference distance (in meters) at which a window with `window_size` gets cut out.
     - `window_size` the window of laser rays that will be extracted everywhere.
     - `threshold_distance` the distance in meters from the center point that will be
-      used to clamp the laser radi. Resulting windows are thus round and not rectangular.
+      used to clamp the laser radii. Since we're talking about laser-radii, this means the cutout is
+      a donut-shaped hull, as opposed to a rectangular hull.
     '''
     s_np = np.fromiter(iter(scan), dtype=np.float32)
     N = len(s_np)
@@ -228,21 +228,18 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     s_np_extended = np.append(s_np, 0)
 
     for i in range(N):
-        #Get the window.
-        sample_points = np.arange(start[i],end[i])
+        # Get the window.
+        sample_points = np.arange(start[i], end[i])
         sample_points[sample_points < 0] = -1
         sample_points[sample_points >= N] = -1
-        window = s_np_extended[sample_points].astype(np.float32)
+        window = s_np_extended[sample_points]
 
-        #Threshold the near and far values
-        window[window > far[i]] = far[i]
-        window[window < near[i]] = near[i]
-
-        #Shift everything to be centered around the middle point. Values will then span [-d,d]
-        window = window - s_np[i]
-        #############################
+        # Threshold the near and far values, then
+        # shift everything to be centered around the middle point.
+        # Values will then span [-d,d]
+        window = np.clip(window, near[i], far[i]) - s_np[i]
 
         #resample it to the correct size.
-        cut_outs[i,:] = cv2.resize(window.reshape((1,current_size[i])), (window_size,1))[0]
+        cut_outs[i,:] = cv2.resize(window[None], (window_size,1))[0]
 
     return cut_outs
