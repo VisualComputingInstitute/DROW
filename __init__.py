@@ -75,7 +75,7 @@ def precrec_unvoted(preds, gts, radius, pred_rphi=False, gt_rphi=False):
         for ip, p in enumerate(ps):
             for igt, gt in enumerate(gts):
                 px, py = rphi_to_xy(*p) if pred_rphi else p
-                gx, gy = rphi_to_xy(*gt) if pred_rphi else gt
+                gx, gy = rphi_to_xy(*gt) if gt_rphi else gt
                 assoc[igt, ip] = np.hypot(px-gx, py-gy)
 
         # Now cutting it off at `radius`, we can get all we need.
@@ -116,7 +116,7 @@ def precrec(preds, gts, radius, pred_rphi=False, gt_rphi=False):
                     continue
 
                 px, py = rphi_to_xy(*p) if pred_rphi else p
-                gx, gy = rphi_to_xy(*gt) if pred_rphi else gt
+                gx, gy = rphi_to_xy(*gt) if gt_rphi else gt
                 d = np.hypot(px-gx, py-gy)
                 if d < min_d:
                     min_d = d
