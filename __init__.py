@@ -207,7 +207,7 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, bin_size=0.1, blur_w
     return [xy_to_rphi(x,y) if out_rphi else (x,y) for x,y in zip(m_x, m_y)]
 
 
-def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, border=29.99):
+def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, border=29.99):
     '''
     Generate window cut outs that all have a fixed size independent of depth.
     This means areas close to the scanner will be subsampled and areas far away
@@ -218,6 +218,7 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     - `scan` an iterable of radii within a laser scan.
     - `standard_depth` the reference distance (in meters) at which a window with `window_size` gets cut out.
     - `window_size` the window of laser rays that will be extracted everywhere.
+    - `npts` is the number of final samples to have per window. `None` means same as `window_size`.
     - `threshold_distance` the distance in meters from the center point that will be
       used to clamp the laser radii. Since we're talking about laser-radii, this means the cutout is
       a donut-shaped hull, as opposed to a rectangular hull.
@@ -226,7 +227,8 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     s_np = np.fromiter(iter(scan), dtype=np.float32)
     N = len(s_np)
 
-    cut_outs = np.zeros((N, window_size), dtype=np.float32)
+    npts = npts or window_size
+    cut_outs = np.zeros((N, npts), dtype=np.float32)
 
     current_size = (window_size * standard_depth / s_np).astype(np.int32)
     start = -current_size//2 + np.arange(N)
@@ -248,6 +250,6 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
         window = np.clip(window, near[i], far[i]) - s_np[i]
 
         #resample it to the correct size.
-        cut_outs[i,:] = cv2.resize(window[None], (window_size,1))[0]
+        cut_outs[i,:] = cv2.resize(window[None], (npts,1))[0]
 
     return cut_outs
