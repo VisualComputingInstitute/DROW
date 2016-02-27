@@ -164,12 +164,13 @@ def precision_recall_curve(precrecs, ls='-o', ax=None, **figkw):
     return ret
 
 
-def votes_to_detections(votes, in_rphi=True, out_rphi=True, bin_size=0.1, blur_win=11, blur_sigma=5.0, x_min=-15.0, x_max=15.0, y_min=-5.0, y_max=15.0):
+def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin_size=0.1, blur_win=11, blur_sigma=5.0, x_min=-15.0, x_max=15.0, y_min=-5.0, y_max=15.0):
     '''
     Convert a list of votes to a list of detections based on Non-Max supression.
 
-    - `votes` an iterable containing predicted x/y or r/phi pairs.
-    - `in_rphi` whether `votes` is r/phi (True) or x/y (False).
+    - `locations` an iterable containing predicted x/y or r/phi pairs.
+    - `probas` an iterable containing predicted probabilities. Considered all ones if `None`.
+    - `in_rphi` whether `locations` is r/phi (True) or x/y (False).
     - `out_rphi` whether the output should be r/phi (True) or x/y (False).
     - `bin_size` the bin size (in meters) used for the grid where votes are cast.
     - `blur_win` the window size (in bins) used to blur the voting grid.
@@ -178,14 +179,27 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, bin_size=0.1, blur_w
     - `x_max` the right limit for the voting grid, in meters.
     - `y_min` the bottom limit for the voting grid in meters.
     - `y_max` the top limit for the voting grid in meters.
+
+    Returns a list of tuples (x,y,class) or (r,phi,class) where `class` is
+    the index into `probas` which was highest for each detection, thus starts at 0.
     '''
+    locations = np.array(locations)
+    if len(locations) == 0:
+        return []
+
+    if probas is None:
+        probas = np.ones((len(locations),1))
+    else:
+        probas = np.array(probas)
+        assert len(probas) == len(locations) and probas.ndim == 2, "Invalid format of `probas`"
+
     x_range = int((x_max-x_min)/bin_size)
     y_range = int((y_max-y_min)/bin_size)
-    grid = np.zeros((x_range, y_range), np.float32)
+    grid = np.zeros((x_range, y_range, 1+probas.shape[1]), np.float32)
 
     # Do the voting into the grid.
-    for v in votes:
-        x,y = rphi_to_xy(*v) if in_rphi else v
+    for loc, p in zip(locations, probas):
+        x,y = rphi_to_xy(*loc) if in_rphi else loc
 
         # Skip votes outside the grid.
         if not (x_min < x < x_max and y_min < y < y_max):
@@ -193,18 +207,25 @@ def votes_to_detections(votes, in_rphi=True, out_rphi=True, bin_size=0.1, blur_w
 
         x = int((x-x_min)/bin_size)
         y = int((y-y_min)/bin_size)
-        grid[x,y] += 1
+        grid[x,y,0] += np.sum(p)
+        grid[x,y,1:] += p
 
+    # Yes, this blurs each channel individually, just what we need!
     grid = cv2.GaussianBlur(grid, (blur_win,blur_win), blur_sigma)
 
-    max_grid = scipy.ndimage.maximum_filter(grid, size=3)
-    maxima = (grid == max_grid) & (grid != 0)
+    # Find the maxima (NMS) only in the "common" voting grid.
+    grid_all = grid[:,:,0]
+    max_grid = scipy.ndimage.maximum_filter(grid_all, size=3)
+    maxima = (grid_all == max_grid) & (grid_all != 0)
     m_x, m_y = np.where(maxima)
+
+    # Probabilities of all classes where maxima were found.
+    m_p = grid[m_x, m_y, 1:]
 
     # Back from grid-bins to real-world locations.
     m_x = m_x*bin_size + x_min + bin_size/2
     m_y = m_y*bin_size + y_min + bin_size/2
-    return [xy_to_rphi(x,y) if out_rphi else (x,y) for x,y in zip(m_x, m_y)]
+    return [(xy_to_rphi(x,y) if out_rphi else (x,y)) + (np.argmax(p),) for x,y,p in zip(m_x, m_y, m_p)]
 
 
 def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, border=29.99):
