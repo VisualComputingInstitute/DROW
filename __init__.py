@@ -165,7 +165,7 @@ def precision_recall_curve(precrecs, ls='-o', ax=None, **figkw):
     return ret
 
 
-def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin_size=0.1, blur_win=11, blur_sigma=5.0, x_min=-15.0, x_max=15.0, y_min=-5.0, y_max=15.0):
+def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin_size=0.1, blur_win=21, blur_sigma=2.0, x_min=-15.0, x_max=15.0, y_min=-5.0, y_max=15.0, retgrid=False):
     '''
     Convert a list of votes to a list of detections based on Non-Max supression.
 
@@ -226,7 +226,8 @@ def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin
     # Back from grid-bins to real-world locations.
     m_x = m_x*bin_size + x_min + bin_size/2
     m_y = m_y*bin_size + y_min + bin_size/2
-    return [(xy_to_rphi(x,y) if out_rphi else (x,y)) + (np.argmax(p),) for x,y,p in zip(m_x, m_y, m_p)]
+    maxima = [(xy_to_rphi(x,y) if out_rphi else (x,y)) + (np.argmax(p),) for x,y,p in zip(m_x, m_y, m_p)]
+    return (maxima, grid) if retgrid else maxima
 
 
 def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, border=29.99, resample_type='cv', **kw):
