@@ -4,6 +4,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cv2
 import scipy.ndimage
+import scipy.interpolate
 
 
 laserFoV = np.radians(225)
@@ -228,7 +229,7 @@ def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin
     return [(xy_to_rphi(x,y) if out_rphi else (x,y)) + (np.argmax(p),) for x,y,p in zip(m_x, m_y, m_p)]
 
 
-def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, border=29.99):
+def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, border=29.99, resample_type='cv', **kw):
     '''
     Generate window cut outs that all have a fixed size independent of depth.
     This means areas close to the scanner will be subsampled and areas far away
@@ -244,6 +245,10 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
       used to clamp the laser radii. Since we're talking about laser-radii, this means the cutout is
       a donut-shaped hull, as opposed to a rectangular hull.
     - `border` the radius value to fill the half of the outermost windows with.
+    - `resample_type` specifies the resampling API to be used. Possible values are:
+        - `cv` for OpenCV's `cv2.resize` function using LINEAR/AREA interpolation.
+        - `zoom` for SciPy's `zoom` function, to which options such as `order=3` can be passed as extra kwargs.
+        - `int1d` for SciPy's `interp1d` function, to which options such as `kind=3` can be passed as extra kwargs.
     '''
     s_np = np.fromiter(iter(scan), dtype=np.float32)
     N = len(s_np)
@@ -270,7 +275,15 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
         # Values will then span [-d,d]
         window = np.clip(window, near[i], far[i]) - s_np[i]
 
-        #resample it to the correct size.
-        cut_outs[i,:] = cv2.resize(window[None], (npts,1))[0]
+        # resample it to the correct size.
+        if resample_type == 'cv':
+            # Use 'INTER_LINEAR' for when down-sampling the image LINEAR is ridiculous.
+            # It's just 1ms slower for a whole scan in the worst case.
+            interp = cv2.INTER_AREA if npts < len(window) else cv2.INTER_LINEAR
+            cut_outs[i,:] = cv2.resize(window[None], (npts,1), interpolation=interp)[0]
+        elif resample_type == 'zoom':
+            scipy.ndimage.interpolation.zoom(window, npts/len(window), output=cut_outs[i,:], **kw)
+        elif resample_type == 'int1d':
+            cut_outs[i,:] = scipy.interpolate.interp1d(np.linspace(0,1, num=len(window), endpoint=True), window, assume_sorted=True, copy=False, **kw)(np.linspace(0,1,num=npts, endpoint=True))
 
     return cut_outs
