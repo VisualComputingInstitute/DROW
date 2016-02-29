@@ -142,27 +142,15 @@ def precrec(preds, gts, radius, pred_rphi=False, gt_rphi=False):
 # )
 
 
-def precision_recall_curve(precrecs, ls='-o', ax=None, **figkw):
-    """
-    - `precrecs` list of (precision,recall) pairs.
-    """
-
-    ret = ax
-    if ax is None:
-        ret = fig, ax = plt.subplots(**figkw)
-
-    precs, recs = zip(*precrecs)
-
-    ax.plot([0,1], [1,0], ls="--", c=".6")
-    ax.plot(recs, precs, ls)
+def prettify_pr_curve(ax):
+    ax.plot([0,1], [0,1], ls="--", c=".6")
     ax.set_xlim(-0.02,1.02)
     ax.set_ylim(-0.02,1.02)
     ax.set_xlabel("Recall [%]")
     ax.set_ylabel("Precision [%]")
     ax.axes.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: '{:.0f}'.format(x*100)))
     ax.axes.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda x, pos: '{:.0f}'.format(x*100)))
-
-    return ret
+    return ax
 
 
 def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin_size=0.1, blur_win=21, blur_sigma=2.0, x_min=-15.0, x_max=15.0, y_min=-5.0, y_max=15.0, retgrid=False):
