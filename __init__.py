@@ -287,7 +287,7 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     return cut_outs
 
 
-def generate_cut_outs_raw(scan, window_size=48, border=29.99):
+def generate_cut_outs_raw(scan, window_size=48, threshold_distance=np.inf, center=False, border=29.99):
     '''
     Generate window cut outs that all have a fixed number of rays independent of depth.
     This means objects close to the scanner will cover more rays and those far away fewer.
@@ -295,6 +295,10 @@ def generate_cut_outs_raw(scan, window_size=48, border=29.99):
 
     - `scan` an iterable of radii within a laser scan.
     - `window_size` the window of laser rays that will be extracted everywhere.
+    - `threshold_distance` the distance in meters from the center point that will be used to clamp the laser radii.
+      Since we're talking about laser-radii, this means the cutout is a donut-shaped hull, as opposed to a rectangular hull.
+      This can be `np.inf` to skip the clamping altogether.
+    - `center` whether to center the cutout around the current laser point's depth (True), or keep depth values raw (False).
     - `border` the radius value to fill the half of the outermost windows with.
     '''
     s_np = np.fromiter(iter(scan), dtype=np.float32)
@@ -306,11 +310,26 @@ def generate_cut_outs_raw(scan, window_size=48, border=29.99):
     end = start + window_size
     s_np_extended = np.append(s_np, border)
 
+    # While we don't really need to special-case, it should save precious computation.
+    if threshold_distance != np.inf:
+        near = s_np-threshold_distance
+        far  = s_np+threshold_distance
+
     for i in range(N):
         # Get the window.
         sample_points = np.arange(start[i], end[i])
         sample_points[sample_points < 0] = -1
         sample_points[sample_points >= N] = -1
-        cut_outs[i,:] = s_np_extended[sample_points]
+        window = s_np_extended[sample_points]
+
+        # Threshold the near and far values, then
+        if threshold_distance != np.inf:
+            window = np.clip(window, near[i], far[i])
+
+        # shift everything to be centered around the middle point.
+        if center:
+            window -= s_np[i]
+
+        cut_outs[i,:] = window
 
     return cut_outs
