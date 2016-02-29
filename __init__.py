@@ -288,3 +288,32 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
             cut_outs[i,:] = scipy.interpolate.interp1d(np.linspace(0,1, num=len(window), endpoint=True), window, assume_sorted=True, copy=False, **kw)(np.linspace(0,1,num=npts, endpoint=True))
 
     return cut_outs
+
+
+def generate_cut_outs_raw(scan, window_size=48, border=29.99):
+    '''
+    Generate window cut outs that all have a fixed number of rays independent of depth.
+    This means objects close to the scanner will cover more rays and those far away fewer.
+    All cut outs will contain the raw values from the input scan.
+
+    - `scan` an iterable of radii within a laser scan.
+    - `window_size` the window of laser rays that will be extracted everywhere.
+    - `border` the radius value to fill the half of the outermost windows with.
+    '''
+    s_np = np.fromiter(iter(scan), dtype=np.float32)
+    N = len(s_np)
+
+    cut_outs = np.zeros((N, window_size), dtype=np.float32)
+
+    start = -window_size//2 + np.arange(N)
+    end = start + window_size
+    s_np_extended = np.append(s_np, border)
+
+    for i in range(N):
+        # Get the window.
+        sample_points = np.arange(start[i], end[i])
+        sample_points[sample_points < 0] = -1
+        sample_points[sample_points >= N] = -1
+        cut_outs[i,:] = s_np_extended[sample_points]
+
+    return cut_outs
