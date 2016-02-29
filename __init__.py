@@ -218,7 +218,7 @@ def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin
     return (maxima, grid) if retgrid else maxima
 
 
-def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, border=29.99, resample_type='cv', **kw):
+def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distance=1.0, npts=None, center=True, border=29.99, resample_type='cv', **kw):
     '''
     Generate window cut outs that all have a fixed size independent of depth.
     This means areas close to the scanner will be subsampled and areas far away
@@ -230,9 +230,10 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     - `standard_depth` the reference distance (in meters) at which a window with `window_size` gets cut out.
     - `window_size` the window of laser rays that will be extracted everywhere.
     - `npts` is the number of final samples to have per window. `None` means same as `window_size`.
-    - `threshold_distance` the distance in meters from the center point that will be
-      used to clamp the laser radii. Since we're talking about laser-radii, this means the cutout is
-      a donut-shaped hull, as opposed to a rectangular hull.
+    - `threshold_distance` the distance in meters from the center point that will be used to clamp the laser radii.
+      Since we're talking about laser-radii, this means the cutout is a donut-shaped hull, as opposed to a rectangular hull.
+      This can be `np.inf` to skip the clamping altogether.
+    - `center` whether to center the cutout around the current laser point's depth (True), or keep depth values raw (False).
     - `border` the radius value to fill the half of the outermost windows with.
     - `resample_type` specifies the resampling API to be used. Possible values are:
         - `cv` for OpenCV's `cv2.resize` function using LINEAR/AREA interpolation.
@@ -248,9 +249,12 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
     current_size = (window_size * standard_depth / s_np).astype(np.int32)
     start = -current_size//2 + np.arange(N)
     end = start + current_size
-    near = s_np-threshold_distance
-    far  = s_np+threshold_distance
     s_np_extended = np.append(s_np, border)
+
+    # While we don't really need to special-case, it should save precious computation.
+    if threshold_distance != np.inf:
+        near = s_np-threshold_distance
+        far  = s_np+threshold_distance
 
     for i in range(N):
         # Get the window.
@@ -260,9 +264,14 @@ def generate_cut_outs(scan, standard_depth=4.0, window_size=48, threshold_distan
         window = s_np_extended[sample_points]
 
         # Threshold the near and far values, then
+        if threshold_distance != np.inf:
+            window = np.clip(window, near[i], far[i])
+
         # shift everything to be centered around the middle point.
-        # Values will then span [-d,d]
-        window = np.clip(window, near[i], far[i]) - s_np[i]
+        if center:
+            window -= s_np[i]
+
+        # Values will now span [-d,d] if `center` and `clamp` are both True.
 
         # resample it to the correct size.
         if resample_type == 'cv':
