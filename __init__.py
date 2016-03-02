@@ -171,6 +171,9 @@ def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin
 
     Returns a list of tuples (x,y,class) or (r,phi,class) where `class` is
     the index into `probas` which was highest for each detection, thus starts at 0.
+
+    NOTE/TODO: We really should replace `bin_size` by `nbins` so as to avoid "remainders".
+               Right now, we simply ignore the remainder on the "max" side.
     '''
     locations = np.array(locations)
     if len(locations) == 0:
@@ -185,6 +188,11 @@ def votes_to_detections(locations, probas=None, in_rphi=True, out_rphi=True, bin
     x_range = int((x_max-x_min)/bin_size)
     y_range = int((y_max-y_min)/bin_size)
     grid = np.zeros((x_range, y_range, 1+probas.shape[1]), np.float32)
+
+    # Update x/y max to correspond to the end of the last bin.
+    # TODO: fix this as stated in the docstring.
+    x_max = x_min + x_range*bin_size
+    y_max = y_min + y_range*bin_size
 
     # Do the voting into the grid.
     for loc, p in zip(locations, probas):
