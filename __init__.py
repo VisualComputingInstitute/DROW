@@ -333,3 +333,24 @@ def generate_cut_outs_raw(scan, window_size=48, threshold_distance=np.inf, cente
         cut_outs[i,:] = window
 
     return cut_outs
+
+
+def hyperopt(pred_conf):
+    ho_wBG = 0.38395839618267696
+    ho_wWC = 0.599481486880304
+    ho_wWA = 0.4885948464627302
+
+    # Unused
+    ho_sigma = 2.93
+    ho_binsz = 0.10
+
+    # Compute "optimal" "tight" window-size dependent on blur-size.
+    ho_blur_win = ho_sigma*5
+    ho_blur_win = int(2*(ho_blur_win//2)+1)  # Make odd
+
+    # Weight network outputs
+    newconf = pred_conf * [ho_wBG, ho_wWC, ho_wWA]
+    # And re-normalize to get "real" probabilities
+    newconf /= np.sum(newconf, axis=-1, keepdims=True)
+
+    return newconf, {'bin_size': ho_binsz, 'blur_win': ho_blur_win, 'blur_sigma': ho_sigma}
