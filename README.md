@@ -1,10 +1,18 @@
 # DROW
 All code related to the ["DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data"](http://arxiv.org/abs/1603.02636) paper.
 
-# Under construction
-We already created this repo to allow for sharing links in advance and possibly have discussion in the issues. We're waiting for feedback on the paper and will publish code for running and training DROW in the near future.
 
-Preliminary, guarantee-free, AS-IS code for running in ROS is available in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
+# DROW Detector ROS Node
+
+We will add here a ROS detector node that can be used with a trained model and outputs standard `PoseArray` messages.
+Until we add it here, you can already get a sneak-peek in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
+
+
+# DROW Training and Evaluation
+
+All code for training and evaluating DROW resides in the `train-eval.ipynb` notebook, which you can open here on github or run for yourself.
+Most, but not all, of this notebook was used during actual training of the final model for the paper.
+While it was not intended to facilitate training your own model, it could be used for that after some careful reading.
 
 
 # DROW Laser Dataset
