@@ -17,7 +17,7 @@ While it was not intended to facilitate training your own model, it could be use
 
 # DROW Laser Dataset
 
-You can obtain our full dataset here on GitHub in the releases section.
+You can obtain our full dataset here on GitHub in the [releases section](https://github.com/VisualComputingInstitute/DROW/releases), specifically the file [DROW-data.zip](https://github.com/VisualComputingInstitute/DROW/releases/download/data/DROW-data.zip).
 
 The laser-based detection dataset released with the paper "DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data" available at https://arxiv.org/abs/1603.02636 and published at ICRA'17.
 
