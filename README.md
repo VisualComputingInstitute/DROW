@@ -1,3 +1,5 @@
+***IMPORTANT NOTE:*** The extension to persons for our new paper [Deep Person Detection in 2D Range Data](https://arxiv.org/abs/1804.02463) will be added at latest upon acceptance.
+
 # DROW
 All code related to the ["DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data"](http://arxiv.org/abs/1603.02636) paper.
 
