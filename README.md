@@ -5,7 +5,7 @@ All code related to our work on detection in laser (aka lidar aka 2D range) data
 - [DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data](http://arxiv.org/abs/1603.02636), henceforth called "v1".
 - [Deep Person Detection in 2D Range Data](https://arxiv.org/abs/1804.02463), henceforth called "v2".
 
-If you use anything provided here, please cite both papers in your work, see [citations below](https://github.com/VisualComputingInstitute/DROW#citations) below for the citation format.
+If you use anything provided here, please cite both papers in your work, see [citations below](#citations-and-thanks) below for the citation format.
 
 # DROW v2 Detector Training and Evaluation
 
@@ -52,7 +52,7 @@ Until we add it here, you can already get a sneak-peek in the [STRANDS repositor
 # DROW Laser Dataset
 
 You can obtain our full dataset here on GitHub in the [releases section](https://github.com/VisualComputingInstitute/DROW/releases),
-specifically the file [DROW-data.zip](https://github.com/VisualComputingInstitute/DROW/releases/download/data/DROW-data.zip).
+specifically the file [DROWv2-data.zip](https://github.com/VisualComputingInstitute/DROW/releases/download/v2/DROWv2-data.zip).
 
 PLEASE read the v1 paper carefully before asking about the dataset, as we describe it at length in Section III.A.
 Further details about the data storage format are given below in this README.
