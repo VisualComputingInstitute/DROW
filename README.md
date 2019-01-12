@@ -7,12 +7,22 @@ All code related to our work on detection in laser (aka lidar aka 2D range) data
 
 If you use anything provided here, please cite both papers in your work, see [citations below](https://github.com/VisualComputingInstitute/DROW#citations) below for the citation format.
 
-
 # DROW v2 Detector Training and Evaluation
 
 Code for training and evaluating DROW (v2) resides in various notebooks in the `v2` subfolder.
 All notebooks are highly similar, and each notebook is used for obtaining one different curve in the paper.
 Our final best model was obtained in `v2/Clean Final* [T=5,net=drow3xLF2p,odom=rot,trainval].ipynb`.
+
+## What's new in v2?
+
+Our second paper ("Deep Person Detection in 2D Range Data") adds the following:
+
+- Annotations of persons in the dataset.
+- Inclusion of odometry in the dataset.
+- New network architecture.
+- Publishing of pre-trained weights.
+- Temporal integration of intormation in the model while respecting odometry.
+- Comparison to well-tuned competing state-of-the-art person detectors. (In the paper only, not this repo.)
 
 ## Pre-trained weights
 
@@ -26,17 +36,17 @@ cuda runtime error (10) : invalid device ordinal
 which can easily be solved by adding `map_location={'cuda:1': 'cuda:0'}` to the `load()` call, [additional details here](https://discuss.pytorch.org/t/saving-and-loading-torch-models-on-2-machines-with-different-number-of-gpu-devices/6666).
 
 
-# DROW v1 Detector ROS Node
-
-We will add here a ROS detector node that can be used with a trained model and outputs standard `PoseArray` messages.
-Until we add it here, you can already get a sneak-peek in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
-
-
 # DROW v1 Training and Evaluation
 
 All code for training and evaluating DROW (v1) resides in the `v1/train-eval.ipynb` notebook, which you can open here on github or run for yourself.
 Most, but not all, of this notebook was used during actual training of the final model for the paper.
 While it was not intended to facilitate training your own model, it could be used for that after some careful reading.
+
+
+## DROW v1 Detector ROS Node
+
+We will add here a ROS detector node that can be used with a trained model and outputs standard `PoseArray` messages.
+Until we add it here, you can already get a sneak-peek in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
 
 
 # DROW Laser Dataset
@@ -47,7 +57,7 @@ specifically the file [DROW-data.zip](https://github.com/VisualComputingInstitut
 PLEASE read the v1 paper carefully before asking about the dataset, as we describe it at length in Section III.A.
 Further details about the data storage format are given below in this README.
 
-## Citations
+## Citations and Thanks
 
 If you use this dataset or code in your work, please cite **both** the following papers:
 
@@ -77,6 +87,9 @@ BibTex:
 }
 ```
 
+Walker and wheelchair annotations by Lucas Beyer (@lucasb-eyer) and Alexander Hermans (@Pandoro),
+and huge thanks to Supinya Beyer (@SupinyaMay) who created the person annotations for v2.
+
 ## License
 
 The whole dataset is published under the MIT license, [roughly meaning](https://tldrlegal.com/license/mit-license) you can use it for whatever you want as long as you credit us.
@@ -101,9 +114,9 @@ Within a sequence, we only annotate every 4th batch, leading to a total of 5 % o
 
 ## Dataset Use and Format
 
-We highly recommend you use the `load_scan` and `load_dets` functions in `utils.py` for loading raw laser scans and detection annotations, respectively.
+We highly recommend you use the `load_scan`, `load_dets`, and `load_odom` functions in `utils.py` for loading raw laser scans, detection annotations, and odometry data, respectively.
 Please see the code's doc-comments or the DROW reference code for details on how to use them.
-Please note that each scan (or frame), as well as detections, comes with a **sequence number that is only unique within a file, but not across files**.
+Please note that each scan (or frame), as well as detections and odometry, comes with a **sequence number that is only unique within a file, but not across files**.
 
 ### Detailed format description
 
@@ -120,3 +133,7 @@ Then follows a json-encoded list of `(r,φ)` pairs, which are the detections in 
 For each detection, `r` represents the distance from the laser scanner and `φ ∈ [-π,π]` the angle in radians, zero being right in the front centered of the scanner ("up"), positive values going to the left and negative ones to the right.
 There's an important difference between an empty frame and an un-annotated one:
 An empty frame is present in the data as `123456,[]` and means that no detection of that type (person/wheelchair/walker) is present in the frame, whereas an un-annotated frame is simply not present in the file: the sequence number is skipped.
+
+Finally, the `.odom2` files again contain one line per frame and start with a sequence number which should be used to match the odometry data to the scan **in the corresponding `.csv` file only**.
+Then follows a comma-separated sequence of floating points, which correspond to `time` in seconds, `Tx` and `Ty` translation in meters, and `φ ∈ [-π,π]` orientation in radians of the robot's scanner.
+These values are all relative to some arbitrary initial value which is not provided, so one should only work with differences.
