@@ -1,35 +1,57 @@
-***IMPORTANT NOTE:*** The extension to persons for our new paper [Deep Person Detection in 2D Range Data](https://arxiv.org/abs/1804.02463) will be added at latest upon acceptance. You can follow [this issue](https://github.com/VisualComputingInstitute/DROW/issues/1) in order to get notified when that happens.
+# DROW: Deep Multiclass Detection in 2D Range ("Laser") Data
 
-# DROW
-All code related to the ["DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data"](http://arxiv.org/abs/1603.02636) paper.
+All code related to our work on detection in laser (aka lidar aka 2D range) data, covering both of the following papers:
+
+- [DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data](http://arxiv.org/abs/1603.02636), henceforth called "v1".
+- [Deep Person Detection in 2D Range Data](https://arxiv.org/abs/1804.02463), henceforth called "v2".
+
+If you use anything provided here, please cite both papers in your work, see [citations below](https://github.com/VisualComputingInstitute/DROW#citations) below for the citation format.
 
 
-# DROW Detector ROS Node
+# DROW v2 Detector Training and Evaluation
+
+Code for training and evaluating DROW (v2) resides in various notebooks in the `v2` subfolder.
+All notebooks are highly similar, and each notebook is used for obtaining one different curve in the paper.
+Our final best model was obtained in `v2/Clean Final* [T=5,net=drow3xLF2p,odom=rot,trainval].ipynb`.
+
+## Pre-trained weights
+
+For DROW v2, we are able to provide the weights of the various models used in the paper here on GitHub in the [releases section](https://github.com/VisualComputingInstitute/DROW/releases).
+The names correspond to the notebooks in the `v2` subfolder which were used to obtain these models.
+
+When trying to load these weights, you might encounter the following error:
+```
+cuda runtime error (10) : invalid device ordinal
+```
+which can easily be solved by adding `map_location={'cuda:1': 'cuda:0'}` to the `load()` call, [additional details here](https://discuss.pytorch.org/t/saving-and-loading-torch-models-on-2-machines-with-different-number-of-gpu-devices/6666).
+
+
+# DROW v1 Detector ROS Node
 
 We will add here a ROS detector node that can be used with a trained model and outputs standard `PoseArray` messages.
 Until we add it here, you can already get a sneak-peek in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
 
 
-# DROW Training and Evaluation
+# DROW v1 Training and Evaluation
 
-All code for training and evaluating DROW resides in the `train-eval.ipynb` notebook, which you can open here on github or run for yourself.
+All code for training and evaluating DROW (v1) resides in the `v1/train-eval.ipynb` notebook, which you can open here on github or run for yourself.
 Most, but not all, of this notebook was used during actual training of the final model for the paper.
 While it was not intended to facilitate training your own model, it could be used for that after some careful reading.
 
 
 # DROW Laser Dataset
 
-You can obtain our full dataset here on GitHub in the [releases section](https://github.com/VisualComputingInstitute/DROW/releases), specifically the file [DROW-data.zip](https://github.com/VisualComputingInstitute/DROW/releases/download/data/DROW-data.zip).
+You can obtain our full dataset here on GitHub in the [releases section](https://github.com/VisualComputingInstitute/DROW/releases),
+specifically the file [DROW-data.zip](https://github.com/VisualComputingInstitute/DROW/releases/download/data/DROW-data.zip).
 
-The laser-based detection dataset released with the paper "DROW: Real-Time Deep Learning based Wheelchair Detection in 2D Range Data" available at https://arxiv.org/abs/1603.02636 and published at ICRA'17.
-
-PLEASE read the paper carefully before asking about the dataset, as we describe it at length in Section III.A.
+PLEASE read the v1 paper carefully before asking about the dataset, as we describe it at length in Section III.A.
+Further details about the data storage format are given below in this README.
 
 ## Citations
 
-If you use this dataset in your work, please cite the following:
+If you use this dataset or code in your work, please cite **both** the following papers:
 
-> Beyer, L., Hermans, A., & Leibe, B. (2017). DROW: Real-Time Deep Learning-Based Wheelchair Detection in 2-D Range Data. IEEE Robotics and Automation Letters, 2(2), 585-592.
+> Beyer*, L., Hermans*, A., Leibe, B. (2017). DROW: Real-Time Deep Learning-Based Wheelchair Detection in 2-D Range Data. IEEE Robotics and Automation Letters, 2(2), 585-592.
 
 BibTex:
 
@@ -39,6 +61,19 @@ BibTex:
   author  = {Beyer*, Lucas and Hermans*, Alexander and Leibe, Bastian},
   journal = {{IEEE Robotics and Automation Letters (RA-L)}},
   year    = {2016}
+}
+```
+
+> Beyer, L., Hermans, A., Linder T., Arras O.K., Leibe, B. (2018). Deep Person Detection in 2D Range Data. IEEE Robotics and Automation Letters, 3(3), 2726-2733.
+
+BibTex:
+
+```
+@article{Beyer2018RAL,
+  title   = {{Deep Person Detection in 2D Range Data}},
+  author  = {Beyer, Lucas and Hermans, Alexander and Linder Timm and Arras Kai O. and Leibe, Bastian},
+  journal = {{IEEE Robotics and Automation Letters (RA-L)}},
+  year    = {2018}
 }
 ```
 
@@ -52,13 +87,13 @@ The [original dataset](https://www.tu-ilmenau.de/de/neurob/data-sets-code/people
 
 ## Data Recording Setup
 
-The exact recording setup is described in Section III.A of our paper.
+The exact recording setup is described in Section III.A of our v1 paper.
 In short, it was recorded using a SICK S300 spanning 225° in 450 poins at 37cm height.
 Recording happened in an elderly care facility, the test-set is completely disjoint from the train and validation sets, as it was recorded in a different aisle of the facility.
 
 ## Data Annotation Setup
 
-Again, the exact setup is described in the paper.
+Again, the exact setup is described in the v1-paper.
 We used [this annotator](https://github.com/lucasb-eyer/laser-detection-annotator) to create the annotations.
 Instead of all the laser scans, we annotate small batches throughout every sequence as follows:
 A batch consists of 100 frames, out of which we annotate every 5th frame, resulting in 20 annotated frames per batch.
@@ -74,7 +109,7 @@ Please note that each scan (or frame), as well as detections, comes with a **seq
 
 If you want to load the files yourself regardless, this is their format:
 
-One recording consists of a `.csv` file which contains all raw laser-scans, and one file per type of annotation, currently `.wc` for wheelchairs and `.wa` for walking-aids, with more to come.
+One recording consists of a `.csv` file which contains all raw laser-scans, and one file per type of annotation, currently `.wc` for wheelchairs, `.wa` for walking-aids, and `.wp` for persons.
 
 The `.csv` files contain one line per scan, the first value is the sequence number of that scan, followed by 450 floating-point values representing the distance at which the laser-points hit something.
 There is at least one "magic value" for that distance at `29.96` which means N/A.
