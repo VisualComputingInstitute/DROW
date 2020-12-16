@@ -45,8 +45,7 @@ While it was not intended to facilitate training your own model, it could be use
 
 ## DROW v1 Detector ROS Node
 
-We will add here a ROS detector node that can be used with a trained model and outputs standard `PoseArray` messages.
-Until we add it here, you can already get a sneak-peek in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
+A ROS detector node that can be used with a trained model and outputs standard `PoseArray` messages can be found in the [STRANDS repositories](https://github.com/strands-project/strands_perception_people/tree/indigo-devel/wheelchair_detector).
 
 
 # DROW Laser Dataset
